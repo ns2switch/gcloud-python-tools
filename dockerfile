@@ -2,6 +2,7 @@
 
 FROM python:3.11.0-slim-bullseye
 
+RUN mkdir -p /app/data
 WORKDIR /app
 
 COPY requirements.txt requirements.txt
