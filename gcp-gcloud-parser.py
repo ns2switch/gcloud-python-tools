@@ -44,19 +44,20 @@ def menu_select(input_text, option_dict, all_value) :
     else :
         if isinstance (sel_menu, int) :
             selected_menu = option_dict[sel_menu]
-            return selected_menu
+            return selected_menu,  sel_menu
         else :
             print ("You need to input a valid value.")
             sys.exit(1)
 
 
-def sele_proj(project_dict) :
+def sele_proj(project_name, project_id) :
     command = 'gcloud config unset project'
     execute_command (command)
-    selected_project = menu_select ("Select project(Insert number): ", project_dict, 0)
+    selected_project, proj_id = menu_select ("Select project(Insert number): ", project_name, 0)
     print ("You have selected: ", selected_project)
-    try :
-        command = f'gcloud config set project "{selected_project}"'
+    project_sel_id = project_id[proj_id]
+    try:    
+        command = f'gcloud config set project "{project_sel_id}"'
         proj = execute_command (command)
         print (proj.stdout.decode ('utf-8'))
     except :
@@ -66,7 +67,8 @@ def sele_proj(project_dict) :
 
 def projects_list() :
     try:
-        project_dict = {}
+        project_name = {}
+        project_id = {}
         print ('Obtaining projects...')
         command = 'gcloud projects list --format=json'
         plist = execute_command (command)
@@ -92,10 +94,11 @@ def projects_list() :
             i = 0
             print ('Projects list:')
             for project in projectst :
-                project_dict[i] = project["name"]
+                project_name[i] = project["name"]
+                project_id[i] = project["projectId"]
                 i += 1
             try :
-                sele_proj (project_dict)
+                sele_proj (project_name, project_id)
             except :
                 print ("select valid value for project")
     except:
@@ -173,7 +176,7 @@ def men_save(audit=None, flow=None, other=None):
         sys.exit('No logs found in this account')
 
 def log_processor(option, start_date, end_date):
-    pass
+    pass    
 
 
 def main() :
