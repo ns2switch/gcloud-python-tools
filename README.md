@@ -1,7 +1,11 @@
 # Gcloud parser
-#### v 0.04 
+#### v 0.05 
 
 This is a gcloud parser that browses through project's log and saves them according to their type.
+
+There are two versions:
+    - gcp-mass-download: download logs from all the projects recursively
+    - gcp-gclod-parser: allow download logs for a project.
 
 ### requirements 
 
