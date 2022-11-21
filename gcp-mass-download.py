@@ -4,7 +4,9 @@ import os
 import json
 import sys
 import re
+import datetime
 from dateparser import parse
+
 
 def execute_command(command) :
     process = subprocess.run (command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -75,8 +77,6 @@ def get_logging_list(project_id, log_type) :
     loglist = execute_command (command)
     audit = 'cloudaudit'
     flow = 'vpc_flow'
-    audit_keys = [key for key, val in log_list.items() if audit in val]
-    flow_keys =  [key for key, val in log_list.items() if flow in val]
     if loglist.returncode == 0 :
         loglisting = loglist.stdout.decode ('utf-8').split ('\n')
         i = 0
@@ -86,11 +86,13 @@ def get_logging_list(project_id, log_type) :
         del log_list[0]
         del log_list[(len (log_list))]
         if log_type == 'AUDIT':
+            audit_keys = [key for key, val in log_list.items() if audit in val]
             audit_logs = {}
             for key in audit_keys:
                 audit_logs[key] = log_list[key]
             return audit_logs
         elif log_type == 'FLOW':
+            flow_keys =  [key for key, val in log_list.items() if flow in val]        
             flow_logs = {}
             for key in flow_keys:
                 flow_logs[key] = log_list[key]
@@ -98,6 +100,8 @@ def get_logging_list(project_id, log_type) :
         elif log_type =='ALL':
             return log_list
         else:
+            flow_keys =  [key for key, val in log_list.items() if flow in val]
+            audit_keys = [key for key, val in log_list.items() if audit in val]
             for key in flow_keys:
                 log_list.pop(key)
             for key in audit_keys:
@@ -109,16 +113,16 @@ def get_logging_list(project_id, log_type) :
 
 def select_dates(start , end):
     start_date_input = start
-    start_date = parse(start_date_input)
+    start_date = parse(start_date_input, settings={'TIMEZONE': 'UTC'})
     end_date_input = end
-    end_date = parse(end_date_input)
+    end_date = parse(end_date_input, settings={'TIMEZONE': 'UTC'})
     if (not start_date_input or not end_date_input):
         print('You must introduce a date')
     if start_date > end_date:
         print('start date needs to be before than end date')
         select_dates()
     else:
-        return start_date, end_date
+        return start_date.isoformat()+'Z', end_date.isoformat()+'Z'
 
 
 def log_processor(option, project_name, project_id, start_date, end_date):
@@ -126,15 +130,22 @@ def log_processor(option, project_name, project_id, start_date, end_date):
     print('end_date :', end_date)
     log_type = option.upper()
     for k, v in project_id.items():
-        print(project_name[k], ':')
+        print(project_name[k], f'{option}', 'logs :')
         result = get_logging_list(v, log_type)
-        print(result)
+        for key, value in result.items():
+            print(value)
+            command = f"gcloud logging read '{value} AND timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\"' --format=\"json\""
+            log_output = execute_command(command)
+            filename_log = f'data/{project_name[k]}-{option}.json'
+            print(filename_log)
+            with open(filename_log , 'ab+') as log_file:
+                log_file.write(log_output.stdout)
 
 
 def argprocessor():
     parser = argparse.ArgumentParser(prog='gcp_mass_downloader', description='Insert log type you wanna download:', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--log_type', metavar='log_type', help='Type of log to download (Audit, Flow)', choices=['Audit',
-        'Flow', 'all', 'other'], required=True)
+    parser.add_argument('--log_type', metavar='log_type', help='Type of log to download ', choices=['audit',
+        'flow', 'all', 'other'], required=True)
     parser.add_argument('--start', default='1 Month ago', help='start date to download')
     parser.add_argument('--end', default='now', help='End date to download.')
     args = parser.parse_args()
