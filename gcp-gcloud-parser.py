@@ -1,3 +1,5 @@
+#still not fully usable
+#in dev.
 import subprocess
 import os
 import json
@@ -132,18 +134,19 @@ def get_logging_list() :
     else:
         print("undef command")
 
-def select_dates():
-    start_date_input = input('Insert start date (p.e.- 1 month ago): ')
-    start_date = parse(start_date_input)
-    end_date_input = input('Insert end date (p.e.- today): ')
-    end_date = parse(end_date_input)
+
+def select_dates(start , end):
+    start_date_input = start
+    start_date = parse(start_date_input, settings={'TIMEZONE': 'UTC'})
+    end_date_input = end
+    end_date = parse(end_date_input, settings={'TIMEZONE': 'UTC'})
     if (not start_date_input or not end_date_input):
         print('You must introduce a date')
     if start_date > end_date:
         print('start date needs to be before than end date')
         select_dates()
     else:
-        return start_date, end_date
+        return start_date.isoformat()+'Z', end_date.isoformat()+'Z'
 
 def men_save(audit=None, flow=None, other=None):
     print('Logs: ', '\n')
@@ -175,8 +178,22 @@ def men_save(audit=None, flow=None, other=None):
     else:
         sys.exit('No logs found in this account')
 
-def log_processor(option, start_date, end_date):
-    pass    
+def log_processor(option, project_name, project_id, start_date, end_date, format):
+    print('start date: ', start_date)
+    print('end_date :', end_date)
+    log_type = option.upper()
+    for k, v in project_id.items():
+        print(project_name[k], f'{option}', 'logs :')
+        result = get_logging_list(v, log_type)
+        for key, value in result.items():
+            print(value)
+            command = f"gcloud logging read '{value} AND timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\"' --format=\"{format}\""
+            print(command)
+            log_output = execute_command(command)
+            filename_log = f'data/{project_name[k]}-{option}.{format}'
+            print(filename_log)
+            with open(filename_log , 'ab+') as log_file:
+                log_file.write(log_output.stdout)
 
 
 def main() :
@@ -188,8 +205,7 @@ def main() :
         sys.exit('An error ocurred , Do you have permisssions in this account?')
     sel_logs = men_save(audit=audit_logs, flow=flow_logs, other=other_logs)
     start_date, end_date = select_dates()
-    log_processor(sel_logs, start_date, end_date)
-    print(sel_logs)
+    log_processor(sel_logs, start_date, end_date, 'json')
     
 if __name__ == '__main__' :
     print ('Authenticating...')

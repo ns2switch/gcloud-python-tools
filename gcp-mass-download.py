@@ -125,7 +125,7 @@ def select_dates(start , end):
         return start_date.isoformat()+'Z', end_date.isoformat()+'Z'
 
 
-def log_processor(option, project_name, project_id, start_date, end_date):
+def log_processor(option, project_name, project_id, start_date, end_date, format):
     print('start date: ', start_date)
     print('end_date :', end_date)
     log_type = option.upper()
@@ -134,9 +134,10 @@ def log_processor(option, project_name, project_id, start_date, end_date):
         result = get_logging_list(v, log_type)
         for key, value in result.items():
             print(value)
-            command = f"gcloud logging read '{value} AND timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\"' --format=\"json\""
+            command = f"gcloud logging read '{value} AND timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\"' --format=\"{format}\""
+            print(command)
             log_output = execute_command(command)
-            filename_log = f'data/{project_name[k]}-{option}.json'
+            filename_log = f'data/{project_name[k]}-{option}.{format}'
             print(filename_log)
             with open(filename_log , 'ab+') as log_file:
                 log_file.write(log_output.stdout)
@@ -144,10 +145,12 @@ def log_processor(option, project_name, project_id, start_date, end_date):
 
 def argprocessor():
     parser = argparse.ArgumentParser(prog='gcp_mass_downloader', description='Insert log type you wanna download:', formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument('--log_type', metavar='log_type', help='Type of log to download ', choices=['audit',
+    parser.add_argument('--log_type', help='Type of log to download ', choices=['audit',
         'flow', 'all', 'other'], required=True)
     parser.add_argument('--start', default='1 Month ago', help='start date to download')
     parser.add_argument('--end', default='now', help='End date to download.')
+    parser.add_argument('--format', default='json', help='format to output logs', choices=['json','list', 'yaml',
+        'none', 'text', 'object', 'default'])
     args = parser.parse_args()
     return args
 
@@ -159,7 +162,7 @@ def main() :
     auth_gcloud ()
     project_name , project_id = projects_list ()
     start_date, end_date = select_dates(args.start, args.end)
-    log_processor(args.log_type, project_name, project_id, start_date, end_date)
+    log_processor(args.log_type, project_name, project_id, start_date, end_date, args.format)
     
     
 if __name__ == '__main__' :
