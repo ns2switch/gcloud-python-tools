@@ -174,7 +174,6 @@ def select_dates(start , end):
         print('You must introduce a date')
     if start_date > end_date:
         print('start date needs to be before than end date')
-        select_dates()
     else:
         return start_date.isoformat()+'Z', end_date.isoformat()+'Z'
 
@@ -214,7 +213,7 @@ def log_processor(option, project_name, project_id, start_date, end_date, format
     log_type = option.upper()
     for k, v in project_id.items():
         print(project_name[k], f'{option}', 'logs :')
-        result = get_logging_list(v, log_type)
+        result = get_logging_list()
         for key, value in result.items():
             print(value)
             command = f"gcloud logging read '{value} AND timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\"' --format=\"{format}\""

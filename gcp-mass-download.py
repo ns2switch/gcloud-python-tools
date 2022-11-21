@@ -161,7 +161,6 @@ def log_processor(option, project_name, project_id, start_date, end_date, format
         for key, value in result.items():
             print(value)
             command = f"gcloud logging read '{value} AND timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\"' --format=\"{format}\""
-            print(command)
             log_output = execute_command(command)
             filename_log = f'data/{project_name[k]}-{option}.{format}'
             print(filename_log)
