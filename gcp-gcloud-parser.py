@@ -26,7 +26,7 @@
 #  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 #  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+#v1.1.2
 #still not fully usable
 #in dev.
 
@@ -131,6 +131,7 @@ def projects_list() :
                 i += 1
             try :
                 sele_proj (project_name, project_id)
+                return (project_name,project_id)
             except :
                 print ("select valid value for project")
     except:
@@ -227,14 +228,12 @@ def log_processor(option, project_name, project_id, start_date, end_date, format
 
 def main() :
     auth_gcloud ()
-    projects_list ()
-    try:
-        audit_logs, flow_logs, other_logs = get_logging_list ()
-    except:
-        sys.exit('An error ocurred , Do you have permisssions in this account?')
-    sel_logs = men_save(audit=audit_logs, flow=flow_logs, other=other_logs)
-    start_date, end_date = select_dates()
-    log_processor(sel_logs, start_date, end_date, 'json')
+    project_name, project_id = projects_list ()
+    start = input('Insert start date: ')
+    end = input("Insert end date: ")
+    sel_logs = men_save()
+    start_date, end_date = select_dates(start,end)
+    log_processor(sel_logs, project_name, project_id, start_date, end_date, 'json')
     
 if __name__ == '__main__' :
     print ('Authenticating...')
