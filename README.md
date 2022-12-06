@@ -8,15 +8,17 @@ There are two versions:
     - gcp-gcloud-parser.py: allow download logs for a project.
     - gcp-mass-native.py: download logs from all projects recursively using native python library
 
-### requirements 
+### requirements:
 
-For gcp-mass-download and gcp-cloud-parser:
-- Need gcloud CLI installed in the running system. https://cloud.google.com/sdk/docs/install
 For all the files:
 - Need a file called service-account.json in the same directory as the .py with the sufficient permissions to access
 resources. This file must be a service account key file.
 
-##usage:
+For gcp-mass-download and gcp-cloud-parser:
+- Need gcloud CLI installed in the running system. https://cloud.google.com/sdk/docs/install
+
+
+## usage:
 all logs and files are saved in data/ dir. This dir needs to be created before run the program.
 
 - gcp-mass-native.py:
