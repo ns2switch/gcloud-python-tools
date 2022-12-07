@@ -40,9 +40,9 @@ def get_logging_list(project_id, log_type, credentials, start_date, end_date) :
     elif log_type.upper() == 'ALL':
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\"'
     client = google.cloud.logging.Client(project=project_id, credentials=credentials)
-    for entries in  client.list_entries(filter_=filter_str):
-        return entries.to_api_repr()
-
+    #for entries in  client.list_entries(filter_=filter_str):
+    	#return entries.to_api_repr()
+    return client.list_entries(filter_=filter_str)
 
 def select_dates(start , end):
     start_date_input = start
@@ -57,6 +57,10 @@ def select_dates(start , end):
     else:
         return start_date.isoformat()+'Z', end_date.isoformat()+'Z'
 
+def save_log(log,filename):
+    with open(filename, "a") as file:
+        file.write(json.dumps(log))
+
 
 def main():
     args = argprocessor()
@@ -68,6 +72,7 @@ def main():
         if log == None:
             print('No ', args.log_type, ' logs for ', project_name[key])
         else:
-            print(log)
+            for entries in log:
+                save_log(entries.to_api_repr(),"data/" + value + ".log")
 if __name__ == '__main__' :
     main ()
