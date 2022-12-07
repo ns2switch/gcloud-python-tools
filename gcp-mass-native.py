@@ -30,26 +30,28 @@
 
 
 from googleapiclient import discovery
+from oauth2client.client import GoogleCredentials
 from google.oauth2 import service_account
+from google.protobuf.json_format import MessageToDict
 import google.cloud.logging
 import argparse
+import json
 from dateparser import parse
 
-
 def get_project_list(credentials):
-	project_name = {}
-	project_id = {}
-	i = 0
-	service = discovery.build('cloudresourcemanager', 'v1', credentials=credentials)
-	request = service.projects().list()
-	while request is not None:
-		response = request.execute()
-		for project in response.get ('projects', []):
-			project_name[i] = project["name"]
-			project_id[i] = project["projectId"]
-			i += 1
-		request = service.projects().list_next(previous_request=request, previous_response=response)
-	return project_name, project_id
+    project_name={}
+    project_id={}
+    i = 0
+    service = discovery.build('cloudresourcemanager', 'v1', credentials=credentials)
+    request = service.projects().list()
+    while request is not None:
+            response = request.execute()
+            for project in response.get('projects', []):
+                project_name[i] = project["name"]
+                project_id[i] = project["projectId"]
+                i += 1
+            request = service.projects().list_next(previous_request=request, previous_response=response)
+    return project_name, project_id
 
 
 def argprocessor() :
@@ -62,17 +64,17 @@ def argprocessor() :
 	args = parser.parse_args ()
 	return args
 
-def get_logging_list(project_id, log_type, credentials, start_date, end_date):
-	if log_type.upper () == 'AUDIT' :
-		filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND logName:\"cloudaudit.googleapis.com\"'
-	elif log_type.upper () == 'FLOW' :
-		filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND resource.type=\"gce_subnetwork\" AND log_id(\"compute.googleapis.com/vpc_flows\")'
-	elif log_type.upper () == 'ALL' :
-		filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\"'
-	client = google.cloud.logging.Client(project=project_id, credentials=credentials)
-	for entries in client.list_entries(filter_=filter_str):
-		return entries.to_api_repr ()
-
+def get_logging_list(project_id, log_type, credentials, start_date, end_date) :
+    if log_type.upper() == 'AUDIT':
+        filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND logName:\"cloudaudit.googleapis.com\"'
+    elif log_type.upper() == 'FLOW':
+        filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND resource.type=\"gce_subnetwork\" AND log_id(\"compute.googleapis.com/vpc_flows\")'
+    elif log_type.upper() == 'ALL':
+        filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\"'
+    client = google.cloud.logging.Client(project=project_id, credentials=credentials)
+    #for entries in  client.list_entries(filter_=filter_str):
+    	#return entries.to_api_repr()
+    return client.list_entries(filter_=filter_str)
 
 def select_dates(start, end) :
 	start_date_input = start
@@ -86,22 +88,22 @@ def select_dates(start, end) :
 	else :
 		return start_date.isoformat () + 'Z', end_date.isoformat () + 'Z'
 
-
-def main() :
-	args = argprocessor ()
-	print('Authenticating')
-	credentials = service_account.Credentials.from_service_account_file ('service-account.json')
-	print('Processing', args.log_type)
-	project_name, project_id = get_project_list (credentials)
-	start, end = select_dates (args.start, args.end)
-	for key, value in project_id.items () :
-		print('Obtaining logs from', project_name[key] ,'/',value,'from',start, 'until',end)
-		log = get_logging_list (value, args.log_type, credentials, start, end)
-		if log == None :
-			print ('No ', args.log_type, ' logs for ', project_name[key])
-		else :
-			print (log)
+def save_log(log,filename):
+    with open(filename, "a") as file:
+        file.write(json.dumps(log))
 
 
+def main():
+    args = argprocessor()
+    credentials = service_account.Credentials.from_service_account_file('service-account.json')
+    project_name, project_id = get_project_list(credentials)
+    start,  end = select_dates(args.start, args.end)
+    for key , value in project_id.items():
+        log = get_logging_list(value,args.log_type, credentials, start, end)
+        if log == None:
+            print('No ', args.log_type, ' logs for ', project_name[key])
+        else:
+            for entries in log:
+                save_log(entries.to_api_repr(),"data/" + value + ".log")
 if __name__ == '__main__' :
-	main ()
+    main ()
