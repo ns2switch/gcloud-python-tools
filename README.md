@@ -1,5 +1,5 @@
 # Gcloud parser
-#### v 0.2 
+#### v 0.4 
 
 This is a gcloud parser that browses through project's log and saves them according to their type.
 

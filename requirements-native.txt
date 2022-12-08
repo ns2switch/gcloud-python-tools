@@ -8,6 +8,7 @@ google-auth==2.14.1
 google-auth-httplib2==0.1.0
 google-cloud-appengine-logging==1.1.6
 google-cloud-audit-log==0.2.4
+google-cloud-bigquery-logging==1.0.7
 google-cloud-core==2.3.2
 google-cloud-logging==3.2.5
 googleapis-common-protos==1.57.0
