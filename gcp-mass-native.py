@@ -27,7 +27,8 @@
 #  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # v0.04 - avoid not recognized types by protobuf
-
+import os
+import glob
 from googleapiclient import discovery
 from google.oauth2 import service_account
 import google.cloud.logging_v2
@@ -58,6 +59,7 @@ def argprocessor() :
     parser.add_argument ('--log_type', help='Type of log to download ', choices=['audit', 'flow', 'all'], required=True)
     parser.add_argument ('--start', default='1 Month ago', help='start date to download')
     parser.add_argument ('--end', default='now', help='End date to download.')
+    parser.add_argument ('--resume', default='no', choices=['yes', 'no'],help='resume download.')
     args = parser.parse_args ()
     return args
 
@@ -68,7 +70,7 @@ def get_logging_list(project_id, log_type, credentials, start_date, end_date) :
     elif log_type.upper() == 'FLOW':
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND resource.type=\"gce_subnetwork\" AND log_id(\"compute.googleapis.com/vpc_flows\")'
     elif log_type.upper() == 'ALL':
-        filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\"'
+        filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND NOT protoPayload.serviceData.@type: \"type.googleapis.com/google.cloud.bigquery.logging.v1.AuditData\"'
     client = google.cloud.logging_v2.Client(project=project_id, credentials=credentials)
     return client.list_entries(filter_=filter_str)
 
@@ -99,6 +101,15 @@ def main():
     project_name, project_id,number = get_project_list(credentials)
     print("There is",number,"project/s")
     start,end = select_dates(args.start, args.end)
+    filename =[]
+    if args.resume.upper() == 'YES':
+        current_path = os.getcwd()
+        resdown = glob.glob(current_path + '/data/*.json')
+        for items in resdown:
+            file = items.split(current_path + '/data/',1)
+            filename += file
+        print(filename)
+        exit(2)
     for key , value in project_id.items():
         print("Checking logs for",project_name[key])
         log = get_logging_list(value,args.log_type, credentials, start, end)
