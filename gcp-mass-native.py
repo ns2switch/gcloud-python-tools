@@ -28,6 +28,8 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 # v0.4 - avoid not recognized types by protobuf
 # v0.5 - allow resume downloads of logs.
+# v0.6 - page_size set at 1000 to avoid rate limit in projects with huge logs
+
 
 import os
 import glob
@@ -37,7 +39,6 @@ import google.cloud.logging_v2
 import argparse
 import json
 from dateparser import parse
-
 
 def get_project_list(credentials):
     project_name={}
@@ -65,7 +66,6 @@ def argprocessor() :
     args = parser.parse_args ()
     return args
 
-
 def get_logging_list(project_id, log_type, credentials, start_date, end_date) :
     if log_type.upper() == 'AUDIT':
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND logName:\"cloudaudit.googleapis.com\" AND NOT protoPayload.serviceData.@type: \"type.googleapis.com/google.cloud.bigquery.logging.v1.AuditData\"'
@@ -74,7 +74,7 @@ def get_logging_list(project_id, log_type, credentials, start_date, end_date) :
     elif log_type.upper() == 'ALL':
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND NOT protoPayload.serviceData.@type: \"type.googleapis.com/google.cloud.bigquery.logging.v1.AuditData\"'
     client = google.cloud.logging_v2.Client(project=project_id, credentials=credentials)
-    return client.list_entries(filter_=filter_str)
+    return client.list_entries(filter_=filter_str, page_size=1000)
 
 
 def select_dates(start, end) :
