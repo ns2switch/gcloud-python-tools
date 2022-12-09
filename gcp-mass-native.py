@@ -26,7 +26,9 @@
 #  CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 #  OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-# v0.04 - avoid not recognized types by protobuf
+# v0.4 - avoid not recognized types by protobuf
+# v0.5 - allow resume downloads of logs.
+
 import os
 import glob
 from googleapiclient import discovery
@@ -88,11 +90,32 @@ def select_dates(start, end) :
         return start_date.isoformat () + 'Z', end_date.isoformat () + 'Z'
 
 
-def save_log(log,filename):
-    with open(filename, "a") as file:
-        file.write(json.dumps(log))
+def save_log(log,filename, format):
+    with open("data/" + filename, "a") as file:
+        if format == 'json':
+            file.write(json.dumps(log))
+        elif format == 'text':
+            file.write(log)
 
 
+def resume_operations(project_id):
+    current_path = os.getcwd()
+    resdown = glob.glob(current_path + '/data/*.json')
+    for file in resdown:
+        downfilename = os.path.basename(file).split('.', 1)[0]
+        key_del = [new_key for new_key in project_id.items() if new_key[1] == downfilename][0][0]
+        del project_id[key_del]
+    return project_id
+
+def resume_file(project_id):
+    with open('data/projects.txt', 'r') as proj:
+        lines = proj.readlines()
+        for line in lines:
+            key_del = [new_key for new_key in project_id.items() if new_key[1] == line.strip()][0][0]
+            del project_id[key_del]
+    return project_id
+
+        
 def main():
     print("Authenticating")
     args = argprocessor()
@@ -103,23 +126,20 @@ def main():
     start,end = select_dates(args.start, args.end)
     filename =[]
     if args.resume.upper() == 'YES':
-        current_path = os.getcwd()
-        resdown = glob.glob(current_path + '/data/*.json')
-        for items in resdown:
-            file = items.split(current_path + '/data/',1)
-            filename += file
-        print(filename)
-        exit(2)
+       project_id = resume_file(project_id)
+       print('Resuming download of', len(project_id), 'projects')
     for key , value in project_id.items():
-        print("Checking logs for",project_name[key])
+        print("Checking logs for",project_name[key], "/ project_id:", value )
         log = get_logging_list(value,args.log_type, credentials, start, end)
         data = list(log)
         if len(data) == 0:
-            print('No', args.log_type, 'logs for project:', project_name[key], "/ project id:", value)
+            print('No', args.log_type, 'logs for project:', project_name[key])
+            save_log(value +'\n', "projects.txt", 'text')
         else:
             print("Saving logs from project", project_name[key], "in data/" + value + ".json")
+            save_log(value +'\n', "projects.txt", 'text')
             for entries in data:
-                save_log(entries.to_api_repr(),"data/" + value + ".json")
+                save_log(entries.to_api_repr(),value + ".json", 'json')
 
 
 if __name__ == '__main__' :
