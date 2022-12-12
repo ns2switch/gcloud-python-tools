@@ -80,7 +80,7 @@ async def get_logging_list(project_id, log_type, credentials, start_date, end_da
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND resource.type=\"gce_subnetwork\" AND log_id(\"compute.googleapis.com/vpc_flows\")'
     elif log_type.upper() == 'ALL':
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND NOT protoPayload.serviceData.@type: \"type.googleapis.com/google.cloud.bigquery.logging.v1.AuditData\"'
-    client = google.cloud.logging_v2.Client(project=project_id, credentials=credentials)
+    client = google.cloud.logging_v2.Client(project=project_id, credentials=credentials,_use_grpc=False)
     return client.list_entries(filter_=filter_str, page_size=1000)
 
 
