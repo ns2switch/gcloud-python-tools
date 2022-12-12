@@ -131,7 +131,7 @@ async def main():
     project_name, project_id,number = get_project_list(credentials)
     print("There is",number,"project/s")
     start,end = select_dates(args.start, args.end)
-    filename =[]
+    print('Obtaining logs from' , start, 'to', end)
     if args.resume.upper() == 'YES':
         project_id = resume_file(project_id)
         print('Resuming download of', len(project_id), 'projects')
