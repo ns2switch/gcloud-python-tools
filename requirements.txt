@@ -1,3 +1,5 @@
+aiofiles==22.1.0
+asyncio==3.4.3
 bcrypt==3.2.0
 cachetools==5.2.0
 capstone==4.0.2
@@ -6,9 +8,17 @@ cffi==1.15.0
 chardet==4.0.0
 colored-traceback==0.3.0
 cryptography==35.0.0
+dateparser==1.1.4
 docker==4.1.0
 google-api-core==2.10.2
+google-api-python-client==2.69.0
 google-auth==2.14.0
+google-auth-httplib2==0.1.0
+google-cloud==0.34.0
+google-cloud-appengine-logging==1.1.6
+google-cloud-audit-log==0.2.4
+google-cloud-core==2.3.2
+google-cloud-logging==3.3.1
 google-cloud-resource-manager==1.6.3
 googleapis-common-protos==1.56.4
 grpc-google-iam-v1==0.12.4
@@ -44,7 +54,10 @@ python-apt==2.2.1
 python-dateutil==2.8.2
 python-debian==0.1.39
 python-debianbts==3.1.0
+pytz==2022.6
+pytz-deprecation-shim==0.1.0.post0
 PyYAML==5.3.1
+regex==2022.10.31
 reportbug==7.10.3+deb11u1
 requests==2.25.1
 ROPGadget==6.6
@@ -52,6 +65,9 @@ rpyc==5.0.1
 rsa==4.9
 six==1.16.0
 sortedcontainers==2.4.0
+tzdata==2022.7
+tzlocal==4.2
 unicorn==2.0.0rc4
+uritemplate==4.1.1
 urllib3==1.26.5
 websocket-client==0.57.0
