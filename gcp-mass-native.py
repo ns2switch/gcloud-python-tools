@@ -31,9 +31,14 @@
 # v0.5 - allow resume downloads of logs.
 # v0.6 - page_size set at 1000 to avoid rate limit in projects with huge logs
 # v0.7 - adding option select_project
+# v0.8 - implementing asyncio
+
+
 
 import os
 import glob
+import asyncio
+import aiofiles
 from googleapiclient import discovery
 from google.oauth2 import service_account
 import google.cloud.logging_v2
@@ -68,7 +73,7 @@ def argprocessor() :
     args = parser.parse_args ()
     return args
 
-def get_logging_list(project_id, log_type, credentials, start_date, end_date) :
+async def get_logging_list(project_id, log_type, credentials, start_date, end_date) :
     if log_type.upper() == 'AUDIT':
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND logName:\"cloudaudit.googleapis.com\" AND NOT protoPayload.serviceData.@type: \"type.googleapis.com/google.cloud.bigquery.logging.v1.AuditData\"'
     elif log_type.upper() == 'FLOW':
@@ -92,12 +97,12 @@ def select_dates(start, end) :
         return start_date.isoformat () + 'Z', end_date.isoformat () + 'Z'
 
 
-def save_log(log,filename, format):
-    with open("data/" + filename, "a") as file:
+async def save_log(log,filename, format):
+    async with aiofiles.open("data/" + filename, "a") as file:
         if format == 'json':
-            file.write(json.dumps(log))
+            await file.write(json.dumps(log))
         elif format == 'text':
-            file.write(log)
+            await file.write(log)
 
 
 def resume_operations(project_id):
@@ -118,7 +123,7 @@ def resume_file(project_id):
     return project_id
 
         
-def main():
+async def main():
     print("Authenticating")
     args = argprocessor()
     credentials = service_account.Credentials.from_service_account_file('service-account.json')
@@ -128,8 +133,8 @@ def main():
     start,end = select_dates(args.start, args.end)
     filename =[]
     if args.resume.upper() == 'YES':
-       project_id = resume_file(project_id)
-       print('Resuming download of', len(project_id), 'projects')
+        project_id = resume_file(project_id)
+        print('Resuming download of', len(project_id), 'projects')
     if args.select_project.upper() == 'YES':
         project_value = {}
         for key, value in project_name.items():
@@ -139,17 +144,16 @@ def main():
         project_id = project_value
     for key , value in project_id.items():
         print("Checking logs for",project_name[key], "/ project_id:", value )
-        log = get_logging_list(value,args.log_type, credentials, start, end)
+        log = await get_logging_list(value,args.log_type, credentials, start, end)
         data = list(log)
         if len(data) == 0:
             print('No', args.log_type, 'logs for project:', project_name[key])
-            save_log(value +'\n', "projects.txt", 'text')
+            await save_log(value +'\n', "projects.txt", 'text')
         else:
             print("Saving logs from project", project_name[key], "in data/" + value + ".json")
-            save_log(value +'\n', "projects.txt", 'text')
+            await save_log(value +'\n', "projects.txt", 'text')
             for entries in data:
-                save_log(entries.to_api_repr(),value + ".json", 'json')
-
+                await save_log(entries.to_api_repr(),value + "-" + args.log_type + ".json", 'json')
 
 if __name__ == '__main__' :
-    main ()
+    asyncio.run(main ())

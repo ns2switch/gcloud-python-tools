@@ -1,9 +1,9 @@
 # Gcloud parser
-#### v 0.7
+#### v 0.8
 
 This is a gcloud parser that browses through project's log and saves them according to their type.
 
-    - gcp-mass-native.py: download logs from all projects recursively using native python library, can also download a single project
+- gcp-mass-native.py: download logs from all projects recursively using native python library, can also download a single project
 
 ### requirements:
 
@@ -18,7 +18,7 @@ python3 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
 mkdir data
-
+./gcp-mass-native.py -h
 
 ~~~
 
@@ -39,10 +39,8 @@ all logs and files are saved in data/ dir. This dir needs to be created before r
 
     gcp-mass-native --log_type audit --start '1 month ago' --end today --> download all audit logs from the projects in the timestamp selected.
 
-    gcp-mass-native --log_type audit --start '1 month ago' --end today --select_project yes --> download audit logs
+    gcp-mass-native --log_type audit --start '1 month ago' --end now --select_project yes --> download audit logs
       from the projects in the timestamp selected..
 ~~~ 
-
-
 
 
