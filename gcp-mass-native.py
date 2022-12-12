@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2022 - Anibal Canada Ruiz - <anibal@n2h4.es>
 #
