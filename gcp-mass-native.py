@@ -29,7 +29,7 @@
 # v0.4 - avoid not recognized types by protobuf
 # v0.5 - allow resume downloads of logs.
 # v0.6 - page_size set at 1000 to avoid rate limit in projects with huge logs
-
+# v0.7 - adding option select_project
 
 import os
 import glob
@@ -63,6 +63,7 @@ def argprocessor() :
     parser.add_argument ('--start', default='1 Month ago', help='start date to download')
     parser.add_argument ('--end', default='now', help='End date to download.')
     parser.add_argument ('--resume', default='no', choices=['yes', 'no'],help='resume download.')
+    parser.add_argument ('--select_project', default='no', choices=['yes', 'no'], help='select project to download')
     args = parser.parse_args ()
     return args
 
@@ -128,6 +129,13 @@ def main():
     if args.resume.upper() == 'YES':
        project_id = resume_file(project_id)
        print('Resuming download of', len(project_id), 'projects')
+    if args.select_project.upper() == 'YES':
+        project_value = {}
+        for key, value in project_name.items():
+            print(key,value)
+        project_sel = int(input('Select a project by its number: '))
+        project_value[project_sel] = project_id[project_sel]
+        project_id = project_value
     for key , value in project_id.items():
         print("Checking logs for",project_name[key], "/ project_id:", value )
         log = get_logging_list(value,args.log_type, credentials, start, end)
