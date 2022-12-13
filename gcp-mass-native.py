@@ -80,7 +80,7 @@ async def get_logging_list(project_id, log_type, credentials, start_date, end_da
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND resource.type=\"gce_subnetwork\" AND log_id(\"compute.googleapis.com/vpc_flows\")'
     elif log_type.upper() == 'ALL':
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND NOT protoPayload.serviceData.@type: \"type.googleapis.com/google.cloud.bigquery.logging.v1.AuditData\"'
-    client = google.cloud.logging_v2.Client(project=project_id, credentials=credentials,_use_grpc=False)
+    client = google.cloud.logging_v2.Client(project=project_id, credentials=credentials,_use_grpc=True) # Test  _use_grpc False or True, it is prefered True by google
     return client.list_entries(filter_=filter_str, page_size=1000)
 
 
@@ -114,9 +114,9 @@ def resume_operations(project_id):
         del project_id[key_del]
     return project_id
 
-def resume_file(project_id):
-    with open('data/projects.txt', 'r') as proj:
-        lines = proj.readlines()
+async def resume_file(project_id):
+    async with aiofiles.open('data/projects.txt', 'r') as proj:
+        lines = await proj.readlines()
         for line in lines:
             key_del = [new_key for new_key in project_id.items() if new_key[1] == line.strip()][0][0]
             del project_id[key_del]
@@ -133,7 +133,7 @@ async def main():
     start,end = select_dates(args.start, args.end)
     print('Obtaining logs from' , start, 'to', end)
     if args.resume.upper() == 'YES':
-        project_id = resume_file(project_id)
+        project_id = await resume_file(project_id)
         print('Resuming download of', len(project_id), 'projects')
     if args.select_project.upper() == 'YES':
         project_value = {}
