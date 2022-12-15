@@ -65,7 +65,7 @@ def get_project_list(credentials):
 def argprocessor() :
     parser = argparse.ArgumentParser (prog='gcp_mass_downloader', description='Insert log type you wanna download:',
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    parser.add_argument ('--log_type', help='Type of log to download ', choices=['audit', 'flow', 'all'], required=True)
+    parser.add_argument ('--log_type', help='Type of log to download ', choices=['audit', 'flow', 'kubernetes', 'all'], required=True)
     parser.add_argument ('--start', default='1 Month ago', help='start date to download')
     parser.add_argument ('--end', default='now', help='End date to download.')
     parser.add_argument ('--resume', default='no', choices=['yes', 'no'],help='resume download.')
@@ -78,6 +78,8 @@ async def get_logging_list(project_id, log_type, credentials, start_date, end_da
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND logName:\"cloudaudit.googleapis.com\" AND NOT protoPayload.serviceData.@type: \"type.googleapis.com/google.cloud.bigquery.logging.v1.AuditData\"'
     elif log_type.upper() == 'FLOW':
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND resource.type=\"gce_subnetwork\" AND log_id(\"compute.googleapis.com/vpc_flows\")'
+    elif log_type.upper() == 'KUBERNETES':
+        filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND (resource.type="gke_cluster" OR resource.type="k8s_cluster")'
     elif log_type.upper() == 'ALL':
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND NOT protoPayload.serviceData.@type: \"type.googleapis.com/google.cloud.bigquery.logging.v1.AuditData\"'
     client = google.cloud.logging_v2.Client(project=project_id, credentials=credentials,_use_grpc=True) # Test  _use_grpc False or True, it is prefered True by google
