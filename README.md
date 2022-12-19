@@ -22,6 +22,8 @@ mkdir data
 
 ~~~
 
+In SOF-ELK you need to install requirements-sof.txt
+
 ## usage:
 all logs and files are saved in data/ dir. This dir needs to be created before run the program.
 

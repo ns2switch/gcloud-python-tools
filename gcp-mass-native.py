@@ -34,7 +34,7 @@
 # v0.8 - implementing asyncio
 # v0.9 - remove aiofiles due compatibility problems with SOF-ELK and python 3.6.
 # v0.9 - now sof-elk can import directly the  produced json.
-
+#
 
 import os
 import glob
