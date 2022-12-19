@@ -32,12 +32,12 @@
 # v0.6 - page_size set at 1000 to avoid rate limit in projects with huge logs
 # v0.7 - adding option select_project
 # v0.8 - implementing asyncio
-
+# v0.9 - remove aiofiles due compatibility problems with SOF-ELK and python 3.6.
+# v0.9 - now sof-elk can import directly the  produced json.
 
 
 import os
 import glob
-import asyncio
 import aiofiles
 from googleapiclient import discovery
 from google.oauth2 import service_account
@@ -45,6 +45,9 @@ import google.cloud.logging_v2
 import argparse
 import json
 from dateparser import parse
+from google.protobuf.json_format import MessageToDict
+from google.protobuf import descriptor
+
 
 def get_project_list(credentials):
     project_name={}
@@ -73,7 +76,7 @@ def argprocessor() :
     args = parser.parse_args ()
     return args
 
-async def get_logging_list(project_id, log_type, credentials, start_date, end_date) :
+def get_logging_list(project_id, log_type, credentials, start_date, end_date) :
     if log_type.upper() == 'AUDIT':
         filter_str = f' timestamp<=\"{end_date}\" AND timestamp>=\"{start_date}\" AND logName:\"cloudaudit.googleapis.com\" AND NOT protoPayload.serviceData.@type: \"type.googleapis.com/google.cloud.bigquery.logging.v1.AuditData\"'
     elif log_type.upper() == 'FLOW':
@@ -99,12 +102,12 @@ def select_dates(start, end) :
         return start_date.isoformat () + 'Z', end_date.isoformat () + 'Z'
 
 
-async def save_log(log,filename, format):
-    async with aiofiles.open("data/" + filename, "a") as file:
-        if format == 'json':
-            await file.write(json.dumps(log))
-        elif format == 'text':
-            await file.write(log)
+def save_log(log,filename, format):
+        with open("data/" + filename, "a",encoding='utf-8') as file:
+            if format == 'json':
+                file.write(json.dumps(log,indent=2))
+            elif format == 'text':
+                file.write(log)
 
 
 def resume_operations(project_id):
@@ -116,16 +119,16 @@ def resume_operations(project_id):
         del project_id[key_del]
     return project_id
 
-async def resume_file(project_id):
-    async with aiofiles.open('data/projects.txt', 'r') as proj:
-        lines = await proj.readlines()
+def resume_file(project_id):
+    with open('data/projects.txt', 'r') as proj:
+        lines = proj.readlines()
         for line in lines:
             key_del = [new_key for new_key in project_id.items() if new_key[1] == line.strip()][0][0]
             del project_id[key_del]
     return project_id
 
-        
-async def main():
+
+def main():
     print("Authenticating")
     args = argprocessor()
     credentials = service_account.Credentials.from_service_account_file('service-account.json')
@@ -135,7 +138,7 @@ async def main():
     start,end = select_dates(args.start, args.end)
     print('Obtaining logs from' , start, 'to', end)
     if args.resume.upper() == 'YES':
-        project_id = await resume_file(project_id)
+        project_id = resume_file(project_id)
         print('Resuming download of', len(project_id), 'projects')
     if args.select_project.upper() == 'YES':
         project_value = {}
@@ -146,16 +149,19 @@ async def main():
         project_id = project_value
     for key , value in project_id.items():
         print("Checking logs for",project_name[key], "/ project_id:", value )
-        log = await get_logging_list(value,args.log_type, credentials, start, end)
+        log = get_logging_list(value,args.log_type, credentials, start, end)
+        log2 = log
         data = list(log)
         if len(data) == 0:
             print('No', args.log_type, 'logs for project:', project_name[key])
-            await save_log(value +'\n', "projects.txt", 'text')
+            save_log(value +'\n', "projects.txt", 'text')
         else:
             print("Saving logs from project", project_name[key], "in data/" + value + ".json")
-            await save_log(value +'\n', "projects.txt", 'text')
-            for entries in data:
-                await save_log(entries.to_api_repr(),value + "-" + args.log_type + ".json", 'json')
+            save_log(value +'\n', "projects.txt", 'text')
+            json_log = []
+            for entry in data:
+                json_log.append(entry.to_api_repr())
+            save_log(json_log,value + "-" + args.log_type + ".json", 'json')
 
 if __name__ == '__main__' :
-    asyncio.run(main ())
+    main ()
