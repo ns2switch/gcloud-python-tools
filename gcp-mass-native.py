@@ -38,15 +38,13 @@
 
 import os
 import glob
-import aiofiles
 from googleapiclient import discovery
 from google.oauth2 import service_account
 import google.cloud.logging_v2
 import argparse
 import json
 from dateparser import parse
-from google.protobuf.json_format import MessageToDict
-from google.protobuf import descriptor
+
 
 
 def get_project_list(credentials):
@@ -162,6 +160,7 @@ def main():
             for entry in data:
                 json_log.append(entry.to_api_repr())
             save_log(json_log,value + "-" + args.log_type + ".json", 'json')
+
 
 if __name__ == '__main__' :
     main ()

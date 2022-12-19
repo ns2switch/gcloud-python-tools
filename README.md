@@ -24,6 +24,15 @@ mkdir data
 
 In SOF-ELK you need to install requirements-sof.txt
 
+~~~
+
+pip install -r requirements-sof.txt
+mkdir data
+./gcp-mass-native.py log_type audit --start '1 week ago' --end now --> all projects.
+
+./gcp-mass-native.py log_type audit --start '1 week ago' --end now --select_project yes --> present a list of projects and allow you select one.
+
+~~~
 ## usage:
 all logs and files are saved in data/ dir. This dir needs to be created before run the program.
 
@@ -39,9 +48,9 @@ all logs and files are saved in data/ dir. This dir needs to be created before r
 
     gcp-mass-native --log_type audit --resume yes --> download audit logs from all the projects, resuming from the last project 
 
-    gcp-mass-native --log_type audit --start '1 month ago' --end today --> download all audit logs from the projects in the timestamp selected.
+    gcp-mass-native --log_type audit --start '1 week ago' --end today --> download all audit logs from the projects in the timestamp selected.
 
-    gcp-mass-native --log_type audit --start '1 month ago' --end now --select_project yes --> download audit logs
+    gcp-mass-native --log_type audit --start '1 week ago' --end now --select_project yes --> download audit logs
       from the projects in the timestamp selected..
 ~~~ 
 

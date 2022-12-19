@@ -1,4 +1,3 @@
-cachetools
 certifi
 charset-normalizer
 dateparser
@@ -32,3 +31,4 @@ tzdata
 tzlocal
 uritemplate
 urllib3
+cachetools
